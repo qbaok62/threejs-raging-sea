@@ -9,6 +9,7 @@ uniform float uSmallWavesSpeed;
 uniform float uSmallWavesIterations;
 
 varying float vElevation;
+varying float vSmallElevation;
 
 // Classic Perlin 3D Noise 
 // by Stefan Gustavson
@@ -100,12 +101,19 @@ float cnoise(vec3 P)
 void main() {
     vec4 modelPosition = modelMatrix * vec4(position, 1.0);
 
-    // Elevation
-    float elevation = sin(modelPosition.x * uBigWavesFrequency.x + uTime * uBigWavesSpeed) * sin(modelPosition.z * uBigWavesFrequency.y + uTime * uBigWavesSpeed) * uBigWavesElevation;
+    /**
+    *  Elevation
+    */
+    // Normalize
+    float bigElevation  = (sin(modelPosition.x * uBigWavesFrequency.x + uTime * uBigWavesSpeed) * sin(modelPosition.z * uBigWavesFrequency.y + uTime * uBigWavesSpeed)) / 2.0 + 0.5;
 
+    // Normalize
+    float smallElevation = 1.0;
     for(float i = 1.0; i <= uSmallWavesIterations; i++) {
-        elevation -= abs(cnoise(vec3(modelPosition.xz * uSmallWavesFrequency * i, uTime * uSmallWavesSpeed)) * uSmallWavesElevation / i);
+        smallElevation -= abs(cnoise(vec3(modelPosition.xz * uSmallWavesFrequency * i, uTime * uSmallWavesSpeed)) / i);
     }
+
+    float elevation = bigElevation * uBigWavesElevation + smallElevation * uSmallWavesElevation;
     
     modelPosition.y += elevation;
 
@@ -115,6 +123,7 @@ void main() {
     gl_Position = projectedPosition;
 
     // Varying
-    vElevation = elevation;
+    vElevation = bigElevation;
+    vSmallElevation = smallElevation * smallElevation * smallElevation; // Cubed to have a sharper gradient curve
 	#include <fog_vertex>
 }
