@@ -9,7 +9,9 @@ import waterFragmentShader from "./shaders/water/fragment.glsl";
  */
 // Debug
 const gui = new GUI({ width: 340 });
-const debugObject = {};
+const debugObject = {
+  fogColor: "#262837",
+};
 
 // Canvas
 const canvas = document.querySelector("canvas.webgl");
@@ -47,6 +49,14 @@ const waterMaterial = new THREE.ShaderMaterial({
     uSurfaceColor: { value: new THREE.Color(debugObject.surfaceColor) },
     uColorOffset: { value: 0.25 },
     uColorMultiplier: { value: 2 },
+
+    fogColor: { value: new THREE.Color(debugObject.fogColor) },
+    fogDensity: { value: 0.5 },
+  },
+  fog: true,
+  defines: {
+    USE_FOG: "",
+    FOG_EXP2: "",
   },
 });
 
@@ -95,6 +105,15 @@ gui
 gui
   .add(waterMaterial.uniforms.uColorMultiplier, "value", 0, 10, 0.001)
   .name("uColorMultiplier");
+gui
+  .addColor(debugObject, "fogColor")
+  .onChange(() => {
+    waterMaterial.uniforms.fogColor.value.set(debugObject.fogColor);
+  })
+  .name("fogColor");
+gui
+  .add(waterMaterial.uniforms.fogDensity, "value", 0, 2, 0.001)
+  .name("fogDensity");
 
 // Mesh
 const water = new THREE.Mesh(waterGeometry, waterMaterial);
